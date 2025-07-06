@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2196F3">
+    <title>Bandwidth Optimized App</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="styles.css" as="style">
+    <link rel="preload" href="app.js" as="script">
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Optimized CSS - inline critical styles -->
+    <style>
+        /* Critical CSS inlined to reduce requests */
+        body{margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f5;color:#333}
+        .container{max-width:800px;margin:0 auto;padding:20px}
+        .header{background:#2196F3;color:white;padding:1rem;margin:-20px -20px 20px;border-radius:8px}
+        .loading{text-align:center;padding:20px}
+        .card{background:white;padding:20px;margin:10px 0;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+        .btn{background:#2196F3;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;margin:5px}
+        .btn:hover{background:#1976D2}
+        .status{padding:10px;border-radius:4px;margin:10px 0}
+        .online{background:#4CAF50;color:white}
+        .limited{background:#FF9800;color:white}
+        .offline{background:#f44336;color:white}
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Bandwidth Optimized App</h1>
+            <div id="connection-status" class="status online">Online - Low Data Mode</div>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>Data Usage Monitor</h2>
+                <div id="data-usage">
+                    <p>Session Data: <span id="session-data">0 KB</span></p>
+                    <p>Cached Resources: <span id="cached-count">0</span></p>
+                    <p>Network Requests: <span id="request-count">0</span></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Content</h2>
+                <div id="content-area">
+                    <div class="loading">Loading optimized content...</div>
+                </div>
+                <button class="btn" onclick="loadContent()">Load More (Efficient)</button>
+                <button class="btn" onclick="refreshContent()">Refresh</button>
+            </div>
+
+            <div class="card">
+                <h2>Offline Features</h2>
+                <p>This app works with minimal internet usage:</p>
+                <ul>
+                    <li>Aggressive caching of resources</li>
+                    <li>Compressed data transfers</li>
+                    <li>Lazy loading of content</li>
+                    <li>Offline fallbacks</li>
+                </ul>
+                <button class="btn" onclick="testOffline()">Test Offline Mode</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register service worker for caching
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>
