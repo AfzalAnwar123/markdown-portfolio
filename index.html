@@ -3,23 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TripPlanner - Plan Your Perfect Journey</title>
-    <meta name="description" content="A comprehensive offline trip planning app">
+    <title>TripPlanner - Live Travel Planning</title>
+    <meta name="description" content="Real-time trip planning with live flight data, weather, and hotel bookings">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
     <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- External APIs -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places" async defer></script>
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
+        <!-- Header with User Authentication -->
         <header class="header">
             <div class="header-content">
-                <h1 class="app-title">✈️ TripPlanner</h1>
-                <p class="app-subtitle">Plan your perfect journey offline</p>
-                <div class="connection-status" id="connectionStatus">
-                    <span class="status-indicator" id="statusIndicator"></span>
-                    <span id="statusText">Online</span>
+                <h1 class="app-title">✈️ TripPlanner Live</h1>
+                <p class="app-subtitle">Real-time trip planning with live data</p>
+                <div class="header-actions">
+                    <div class="connection-status" id="connectionStatus">
+                        <span class="status-indicator online" id="statusIndicator"></span>
+                        <span id="statusText">Connected</span>
+                    </div>
+                    <div class="user-section" id="userSection">
+                        <div class="user-menu" id="userMenu">
+                            <button class="btn btn-secondary" id="loginBtn">Sign In</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -27,11 +40,12 @@
         <!-- Navigation -->
         <nav class="nav-tabs">
             <button class="nav-tab active" data-tab="trip-info">Trip Info</button>
-            <button class="nav-tab" data-tab="flights">Flights</button>
+            <button class="nav-tab" data-tab="flights">Live Flights</button>
             <button class="nav-tab" data-tab="accommodation">Hotels</button>
             <button class="nav-tab" data-tab="activities">Activities</button>
+            <button class="nav-tab" data-tab="weather">Weather</button>
             <button class="nav-tab" data-tab="packing">Packing</button>
-            <button class="nav-tab" data-tab="saved-trips">My Trips</button>
+            <button class="nav-tab" data-tab="my-trips">My Trips</button>
         </nav>
 
         <!-- Main Content -->
@@ -49,11 +63,13 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="departure">From</label>
-                                <input type="text" id="departure" placeholder="Your departure city" required>
+                                <input type="text" id="departure" class="autocomplete-input" placeholder="Search departure city" required>
+                                <div class="autocomplete-results" id="departureResults"></div>
                             </div>
                             <div class="form-group">
                                 <label for="destination">To</label>
-                                <input type="text" id="destination" placeholder="Your destination" required>
+                                <input type="text" id="destination" class="autocomplete-input" placeholder="Search destination" required>
+                                <div class="autocomplete-results" id="destinationResults"></div>
                             </div>
                         </div>
 
@@ -70,248 +86,314 @@
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="travelers">Number of Travelers</label>
-                                <select id="travelers">
-                                    <option value="1">1 Person</option>
-                                    <option value="2">2 People</option>
-                                    <option value="3">3 People</option>
-                                    <option value="4">4 People</option>
-                                    <option value="5+">5+ People</option>
-                                </select>
+                                <label for="travelers">Travelers</label>
+                                <div class="traveler-input">
+                                    <select id="adults">
+                                        <option value="1">1 Adult</option>
+                                        <option value="2">2 Adults</option>
+                                        <option value="3">3 Adults</option>
+                                        <option value="4">4 Adults</option>
+                                    </select>
+                                    <select id="children">
+                                        <option value="0">0 Children</option>
+                                        <option value="1">1 Child</option>
+                                        <option value="2">2 Children</option>
+                                        <option value="3">3 Children</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label for="budget">Budget Range</label>
-                                <select id="budget">
-                                    <option value="budget">Budget ($)</option>
-                                    <option value="mid-range">Mid-range ($$)</option>
-                                    <option value="luxury">Luxury ($$$)</option>
-                                    <option value="no-limit">No limit</option>
-                                </select>
+                                <label for="budget">Budget (USD)</label>
+                                <div class="budget-input">
+                                    <input type="range" id="budgetRange" min="500" max="20000" value="5000" step="500">
+                                    <div class="budget-display">$<span id="budgetValue">5000</span></div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="tripType">Trip Type</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="business"> Business
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="leisure"> Leisure
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="adventure"> Adventure
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="cultural"> Cultural
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="romantic"> Romantic
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="family"> Family
-                                </label>
+                            <label>Trip Type</label>
+                            <div class="trip-type-selector">
+                                <button type="button" class="trip-type-btn" data-type="business">
+                                    <span class="icon">💼</span>
+                                    <span>Business</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="leisure">
+                                    <span class="icon">🏖️</span>
+                                    <span>Leisure</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="adventure">
+                                    <span class="icon">🏔️</span>
+                                    <span>Adventure</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="cultural">
+                                    <span class="icon">🏛️</span>
+                                    <span>Cultural</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="romantic">
+                                    <span class="icon">💕</span>
+                                    <span>Romantic</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="family">
+                                    <span class="icon">👨‍👩‍👧‍👦</span>
+                                    <span>Family</span>
+                                </button>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label for="notes">Additional Notes</label>
-                            <textarea id="notes" placeholder="Any special requirements, preferences, or notes about your trip..."></textarea>
+                            <textarea id="notes" placeholder="Special requirements, dietary restrictions, accessibility needs..."></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" onclick="searchLiveOptions()">
+                                <span class="loading" id="searchLoading" style="display: none;"></span>
+                                Search Live Options
+                            </button>
                         </div>
                     </form>
                 </div>
+
+                <!-- Live Trip Suggestions -->
+                <div class="card" id="liveRecommendations" style="display: none;">
+                    <h3>🤖 AI Trip Recommendations</h3>
+                    <div id="aiSuggestions" class="ai-suggestions"></div>
+                </div>
             </section>
 
-            <!-- Flights Tab -->
+            <!-- Live Flights Tab -->
             <section class="tab-content" id="flights">
                 <div class="card">
-                    <h2>Flight Options</h2>
-                    <div class="flight-search">
+                    <div class="card-header">
+                        <h2>Live Flight Search</h2>
+                        <div class="live-indicator">
+                            <span class="pulse-dot"></span>
+                            <span>Real-time prices</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flight-filters">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="flightType">Flight Type</label>
-                                <select id="flightType">
-                                    <option value="round-trip">Round Trip</option>
-                                    <option value="one-way">One Way</option>
-                                    <option value="multi-city">Multi-city</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="class">Class</label>
-                                <select id="class">
+                                <label for="flightClass">Class</label>
+                                <select id="flightClass">
                                     <option value="economy">Economy</option>
-                                    <option value="premium-economy">Premium Economy</option>
+                                    <option value="premium_economy">Premium Economy</option>
                                     <option value="business">Business</option>
                                     <option value="first">First Class</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="preferredAirlines">Preferred Airlines</label>
-                            <input type="text" id="preferredAirlines" placeholder="e.g., Delta, American Airlines, United">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="flightPreferences">Flight Preferences</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="non-stop"> Non-stop flights preferred
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="flexible-dates"> Flexible with dates
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="morning"> Morning flights
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="evening"> Evening flights
-                                </label>
+                            <div class="form-group">
+                                <label for="directFlights">Flight Type</label>
+                                <div class="toggle-group">
+                                    <label class="toggle-option">
+                                        <input type="radio" name="flightType" value="any" checked>
+                                        <span>Any</span>
+                                    </label>
+                                    <label class="toggle-option">
+                                        <input type="radio" name="flightType" value="direct">
+                                        <span>Direct Only</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="searchLiveFlights()">
+                            <span id="flightSearchLoading" class="loading" style="display: none;"></span>
+                            Search Flights
+                        </button>
+                    </div>
 
-                        <div id="savedFlights" class="saved-items">
-                            <h3>Saved Flight Options</h3>
-                            <div class="saved-list" id="flightsList"></div>
+                    <div class="flight-results" id="flightResults">
+                        <div class="results-placeholder">
+                            <div class="placeholder-icon">✈️</div>
+                            <p>Enter your trip details and search for live flight prices</p>
                         </div>
+                    </div>
+                </div>
 
-                        <button type="button" class="btn btn-secondary" onclick="addFlightOption()">Add Flight Option</button>
+                <!-- Price Alerts -->
+                <div class="card">
+                    <h3>Price Alerts</h3>
+                    <div class="price-alerts">
+                        <div class="alert-setup">
+                            <input type="email" id="alertEmail" placeholder="Email for price alerts">
+                            <input type="number" id="targetPrice" placeholder="Target price">
+                            <button class="btn btn-secondary" onclick="setupPriceAlert()">Set Alert</button>
+                        </div>
+                        <div id="activeAlerts" class="active-alerts"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- Accommodation Tab -->
+            <!-- Hotels Tab -->
             <section class="tab-content" id="accommodation">
                 <div class="card">
-                    <h2>Accommodation</h2>
-                    <div class="form-row">
+                    <div class="card-header">
+                        <h2>Live Hotel Search</h2>
+                        <div class="live-indicator">
+                            <span class="pulse-dot"></span>
+                            <span>Real-time availability</span>
+                        </div>
+                    </div>
+
+                    <div class="hotel-filters">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="checkIn">Check-in</label>
+                                <input type="date" id="checkIn">
+                            </div>
+                            <div class="form-group">
+                                <label for="checkOut">Check-out</label>
+                                <input type="date" id="checkOut">
+                            </div>
+                            <div class="form-group">
+                                <label for="hotelGuests">Guests</label>
+                                <select id="hotelGuests">
+                                    <option value="1">1 Guest</option>
+                                    <option value="2">2 Guests</option>
+                                    <option value="3">3 Guests</option>
+                                    <option value="4">4 Guests</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-group">
-                            <label for="accommodationType">Type</label>
-                            <select id="accommodationType">
-                                <option value="hotel">Hotel</option>
-                                <option value="motel">Motel</option>
-                                <option value="resort">Resort</option>
-                                <option value="bnb">Bed & Breakfast</option>
-                                <option value="airbnb">Airbnb/Vacation Rental</option>
-                                <option value="hostel">Hostel</option>
-                                <option value="camping">Camping</option>
-                            </select>
+                            <label>Star Rating</label>
+                            <div class="star-filter">
+                                <button type="button" class="star-btn" data-stars="any">Any</button>
+                                <button type="button" class="star-btn" data-stars="3">3★+</button>
+                                <button type="button" class="star-btn" data-stars="4">4★+</button>
+                                <button type="button" class="star-btn" data-stars="5">5★</button>
+                            </div>
                         </div>
+
                         <div class="form-group">
-                            <label for="rooms">Rooms Needed</label>
-                            <select id="rooms">
-                                <option value="1">1 Room</option>
-                                <option value="2">2 Rooms</option>
-                                <option value="3">3 Rooms</option>
-                                <option value="4+">4+ Rooms</option>
-                            </select>
+                            <label>Amenities</label>
+                            <div class="amenity-filters">
+                                <label class="amenity-filter">
+                                    <input type="checkbox" value="wifi">
+                                    <span>WiFi</span>
+                                </label>
+                                <label class="amenity-filter">
+                                    <input type="checkbox" value="pool">
+                                    <span>Pool</span>
+                                </label>
+                                <label class="amenity-filter">
+                                    <input type="checkbox" value="gym">
+                                    <span>Gym</span>
+                                </label>
+                                <label class="amenity-filter">
+                                    <input type="checkbox" value="spa">
+                                    <span>Spa</span>
+                                </label>
+                                <label class="amenity-filter">
+                                    <input type="checkbox" value="restaurant">
+                                    <span>Restaurant</span>
+                                </label>
+                                <label class="amenity-filter">
+                                    <input type="checkbox" value="parking">
+                                    <span>Parking</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary" onclick="searchLiveHotels()">
+                            <span id="hotelSearchLoading" class="loading" style="display: none;"></span>
+                            Search Hotels
+                        </button>
+                    </div>
+
+                    <div class="hotel-results" id="hotelResults">
+                        <div class="results-placeholder">
+                            <div class="placeholder-icon">🏨</div>
+                            <p>Search for hotels with real-time availability and pricing</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label for="accommodationPreferences">Preferences</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="wifi"> Free WiFi
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="parking"> Free Parking
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="pool"> Swimming Pool
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="gym"> Fitness Center
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="spa"> Spa Services
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="restaurant"> Restaurant
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="breakfast"> Breakfast Included
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" value="pet-friendly"> Pet Friendly
-                            </label>
-                        </div>
-                    </div>
-
-                    <div id="savedHotels" class="saved-items">
-                        <h3>Saved Hotels</h3>
-                        <div class="saved-list" id="hotelsList"></div>
-                    </div>
-
-                    <button type="button" class="btn btn-secondary" onclick="addHotelOption()">Add Hotel Option</button>
+                <!-- Interactive Map -->
+                <div class="card">
+                    <h3>Hotel Map</h3>
+                    <div id="hotelMap" class="interactive-map"></div>
                 </div>
             </section>
 
             <!-- Activities Tab -->
             <section class="tab-content" id="activities">
                 <div class="card">
-                    <h2>Activities & Transportation</h2>
+                    <h2>Local Activities & Experiences</h2>
                     
-                    <div class="subsection">
-                        <h3>Transportation</h3>
-                        <div class="form-group">
-                            <label>Transportation Options</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="rental-car"> Rental Car
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="public-transport"> Public Transportation
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="taxi-uber"> Taxi/Uber/Lyft
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="walking"> Walking
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="bike-rental"> Bike Rental
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="tours"> Guided Tours
-                                </label>
+                    <div class="activity-search">
+                        <div class="search-filters">
+                            <input type="text" id="activityQuery" placeholder="Search activities, tours, restaurants...">
+                            <select id="activityCategory">
+                                <option value="">All Categories</option>
+                                <option value="tours">Tours</option>
+                                <option value="restaurants">Restaurants</option>
+                                <option value="attractions">Attractions</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="outdoor">Outdoor Activities</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="nightlife">Nightlife</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="searchActivities()">Search</button>
+                        </div>
+                    </div>
+
+                    <div class="activity-results" id="activityResults">
+                        <div class="results-placeholder">
+                            <div class="placeholder-icon">🎯</div>
+                            <p>Discover activities and experiences at your destination</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transportation -->
+                <div class="card">
+                    <h3>Transportation Options</h3>
+                    <div class="transport-options" id="transportOptions">
+                        <div class="transport-loading">
+                            <p>Loading transportation options...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Weather Tab -->
+            <section class="tab-content" id="weather">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Live Weather Forecast</h2>
+                        <div class="live-indicator">
+                            <span class="pulse-dot"></span>
+                            <span>Updated hourly</span>
+                        </div>
+                    </div>
+
+                    <div class="weather-overview" id="weatherOverview">
+                        <div class="current-weather" id="currentWeather">
+                            <div class="weather-placeholder">
+                                <div class="placeholder-icon">🌤️</div>
+                                <p>Add destination to see live weather</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="subsection">
-                        <h3>Food & Dining</h3>
-                        <div class="form-group">
-                            <label>Dining Preferences</label>
-                            <div class="checkbox-group">
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="local-cuisine"> Local Cuisine
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="fine-dining"> Fine Dining
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="street-food"> Street Food
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="vegetarian"> Vegetarian Options
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="vegan"> Vegan Options
-                                </label>
-                                <label class="checkbox-item">
-                                    <input type="checkbox" value="food-allergies"> Food Allergies Considered
-                                </label>
-                            </div>
-                        </div>
+                    <div class="weather-forecast" id="weatherForecast"></div>
+                    
+                    <div class="weather-insights" id="weatherInsights">
+                        <h3>Travel Insights</h3>
+                        <div id="travelWeatherTips" class="weather-tips"></div>
                     </div>
+                </div>
 
-                    <div class="subsection">
-                        <h3>Activities & Attractions</h3>
-                        <div id="savedActivities" class="saved-items">
-                            <div class="saved-list" id="activitiesList"></div>
-                        </div>
-                        <button type="button" class="btn btn-secondary" onclick="addActivity()">Add Activity</button>
+                <!-- Weather Alerts -->
+                <div class="card">
+                    <h3>Weather Alerts</h3>
+                    <div id="weatherAlerts" class="weather-alerts">
+                        <p>No weather alerts for your destination</p>
                     </div>
                 </div>
             </section>
@@ -319,170 +401,171 @@
             <!-- Packing Tab -->
             <section class="tab-content" id="packing">
                 <div class="card">
-                    <h2>Packing List & Clothing Tips</h2>
+                    <h2>Smart Packing Assistant</h2>
                     
-                    <div class="weather-info" id="weatherInfo">
-                        <h3>Weather & Clothing Recommendations</h3>
-                        <div class="weather-tips" id="weatherTips">
-                            <p>Add your destination and travel dates to get personalized clothing recommendations!</p>
+                    <div class="packing-insights" id="packingInsights">
+                        <div class="insights-placeholder">
+                            <div class="placeholder-icon">🧳</div>
+                            <p>Get personalized packing recommendations based on weather and activities</p>
                         </div>
                     </div>
 
                     <div class="packing-categories">
                         <div class="packing-category">
                             <h3>Clothing</h3>
-                            <div class="packing-list" id="clothingList">
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Shirts/Tops
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Pants/Bottoms
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Underwear
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Socks
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Shoes
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Jacket/Coat
-                                    </label>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-small" onclick="addPackingItem('clothing')">Add Item</button>
-                        </div>
-
-                        <div class="packing-category">
-                            <h3>Toiletries</h3>
-                            <div class="packing-list" id="toiletryList">
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Toothbrush & Toothpaste
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Shampoo & Conditioner
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Deodorant
-                                    </label>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-small" onclick="addPackingItem('toiletry')">Add Item</button>
+                            <div class="packing-list" id="clothingList"></div>
+                            <button type="button" class="btn btn-small" onclick="addCustomItem('clothing')">Add Item</button>
                         </div>
 
                         <div class="packing-category">
                             <h3>Electronics</h3>
-                            <div class="packing-list" id="electronicsList">
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Phone Charger
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Power Bank
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Camera
-                                    </label>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-small" onclick="addPackingItem('electronics')">Add Item</button>
+                            <div class="packing-list" id="electronicsList"></div>
+                            <button type="button" class="btn btn-small" onclick="addCustomItem('electronics')">Add Item</button>
+                        </div>
+
+                        <div class="packing-category">
+                            <h3>Toiletries</h3>
+                            <div class="packing-list" id="toiletryList"></div>
+                            <button type="button" class="btn btn-small" onclick="addCustomItem('toiletry')">Add Item</button>
                         </div>
 
                         <div class="packing-category">
                             <h3>Documents</h3>
-                            <div class="packing-list" id="documentsList">
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Passport/ID
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Travel Insurance
-                                    </label>
-                                </div>
-                                <div class="packing-item">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox"> Tickets/Confirmations
-                                    </label>
-                                </div>
+                            <div class="packing-list" id="documentsList"></div>
+                            <button type="button" class="btn btn-small" onclick="addCustomItem('documents')">Add Item</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Packing Checklist -->
+                <div class="card">
+                    <h3>Packing Progress</h3>
+                    <div class="packing-progress">
+                        <div class="progress-circle" id="packingProgress">
+                            <div class="progress-text">0%</div>
+                        </div>
+                        <div class="progress-stats">
+                            <div class="stat">
+                                <span class="stat-number" id="packedItems">0</span>
+                                <span class="stat-label">Packed</span>
                             </div>
-                            <button type="button" class="btn btn-small" onclick="addPackingItem('documents')">Add Item</button>
+                            <div class="stat">
+                                <span class="stat-number" id="totalItems">0</span>
+                                <span class="stat-label">Total</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Saved Trips Tab -->
-            <section class="tab-content" id="saved-trips">
+            <!-- My Trips Tab -->
+            <section class="tab-content" id="my-trips">
                 <div class="card">
-                    <h2>My Saved Trips</h2>
-                    <div class="trip-actions">
-                        <button type="button" class="btn btn-primary" onclick="saveCurrentTrip()">Save Current Trip</button>
-                        <button type="button" class="btn btn-secondary" onclick="exportData()">Export All Data</button>
-                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import Data</button>
+                    <div class="card-header">
+                        <h2>My Trips</h2>
+                        <div class="sync-status" id="syncStatus">
+                            <span class="sync-indicator"></span>
+                            <span>Synced</span>
+                        </div>
                     </div>
-                    <div id="savedTripsList" class="saved-trips-list"></div>
+                    
+                    <div class="trip-actions">
+                        <button type="button" class="btn btn-primary" onclick="saveCurrentTrip()">
+                            <span id="saveTripLoading" class="loading" style="display: none;"></span>
+                            Save Current Trip
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="shareTrip()">Share Trip</button>
+                        <button type="button" class="btn btn-secondary" onclick="exportTrip()">Export PDF</button>
+                    </div>
+                    
+                    <div id="savedTripsList" class="saved-trips-list">
+                        <div class="loading-placeholder">
+                            <div class="loading"></div>
+                            <p>Loading your trips...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collaborative Features -->
+                <div class="card">
+                    <h3>Collaborate</h3>
+                    <div class="collaboration">
+                        <div class="share-options">
+                            <input type="email" id="collaboratorEmail" placeholder="Invite by email">
+                            <button class="btn btn-secondary" onclick="inviteCollaborator()">Invite</button>
+                        </div>
+                        <div id="collaborators" class="collaborators"></div>
+                    </div>
                 </div>
             </section>
         </main>
 
         <!-- Quick Actions Footer -->
         <footer class="quick-actions">
-            <button type="button" class="action-btn" onclick="saveProgress()" title="Save Progress">
+            <button type="button" class="action-btn" onclick="quickSave()" title="Quick Save">
                 💾 Save
             </button>
-            <button type="button" class="action-btn" onclick="clearForm()" title="Clear Form">
-                🗑️ Clear
+            <button type="button" class="action-btn" onclick="refreshData()" title="Refresh Data">
+                🔄 Refresh
             </button>
-            <button type="button" class="action-btn" onclick="generateSummary()" title="Trip Summary">
-                📋 Summary
+            <button type="button" class="action-btn" onclick="generateItinerary()" title="Generate Itinerary">
+                📋 Itinerary
             </button>
-            <button type="button" class="action-btn" onclick="shareTripPlan()" title="Share Trip">
+            <button type="button" class="action-btn" onclick="shareCurrentTrip()" title="Share Trip">
                 📤 Share
             </button>
         </footer>
     </div>
 
-    <!-- Modal for Trip Summary -->
-    <div class="modal" id="summaryModal">
+    <!-- Modals -->
+    <div class="modal" id="loginModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Trip Summary</h2>
-                <button class="modal-close" onclick="closeModal('summaryModal')">&times;</button>
+                <h2>Sign In</h2>
+                <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
             </div>
-            <div class="modal-body" id="summaryContent">
-                <!-- Summary content will be generated here -->
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('summaryModal')">Close</button>
-                <button class="btn btn-primary" onclick="printSummary()">Print</button>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="signin">Sign In</button>
+                    <button class="auth-tab" data-tab="signup">Sign Up</button>
+                </div>
+                <form id="authForm">
+                    <div class="form-group">
+                        <input type="email" id="authEmail" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="authPassword" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary full-width">Sign In</button>
+                </form>
+                <div class="social-auth">
+                    <button class="btn btn-google" onclick="signInWithGoogle()">
+                        <span class="google-icon">G</span>
+                        Continue with Google
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    <div class="modal" id="itineraryModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2>Your Itinerary</h2>
+                <button class="modal-close" onclick="closeModal('itineraryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="itineraryContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('itineraryModal')">Close</button>
+                <button class="btn btn-primary" onclick="downloadItinerary()">Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notifications" class="notifications"></div>
 
     <script src="app.js"></script>
 </body>
