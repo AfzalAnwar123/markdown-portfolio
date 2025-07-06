@@ -1,0 +1,88 @@
+{
+  "name": "TripPlanner - Offline Trip Planning App",
+  "short_name": "TripPlanner",
+  "description": "A comprehensive offline trip planning app for managing flights, accommodations, activities, and packing lists",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#2563eb",
+  "background_color": "#f8fafc",
+  "categories": ["travel", "productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%232563eb' rx='24'/><text x='96' y='130' text-anchor='middle' font-size='100' fill='white'>✈️</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%232563eb' rx='64'/><text x='256' y='350' text-anchor='middle' font-size='280' fill='white'>✈️</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "features": [
+    "offline support",
+    "data export/import",
+    "local storage",
+    "responsive design",
+    "cross platform"
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect width='540' height='720' fill='%23f8fafc'/><rect x='0' y='0' width='540' height='100' fill='%232563eb'/><text x='270' y='60' text-anchor='middle' font-size='24' fill='white'>TripPlanner</text><rect x='20' y='120' width='500' height='580' fill='white' stroke='%23e2e8f0' rx='8'/><text x='40' y='160' font-size='20' fill='%231e293b'>Plan Your Perfect Journey</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Trip planning interface"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Trip",
+      "short_name": "New",
+      "url": "/?action=new-trip",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%232563eb' rx='12'/><text x='48' y='65' text-anchor='middle' font-size='50' fill='white'>+</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "My Trips",
+      "short_name": "Trips",
+      "url": "/?tab=saved-trips",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%232563eb' rx='12'/><text x='48' y='65' text-anchor='middle' font-size='40' fill='white'>📋</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Packing List",
+      "short_name": "Pack",
+      "url": "/?tab=packing",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%232563eb' rx='12'/><text x='48' y='65' text-anchor='middle' font-size='40' fill='white'>🧳</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
+}
