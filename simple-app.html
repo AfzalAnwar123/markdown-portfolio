@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripPlanner - Simple Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.875rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            color: #2563eb;
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        .nav-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        .main-content {
+            padding: 1.5rem 1rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+
+        .trip-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .trip-type-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .trip-type-btn:hover {
+            border-color: #2563eb;
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .trip-type-btn.active {
+            border-color: #2563eb;
+            background: #2563eb;
+            color: white;
+        }
+
+        .trip-type-btn .icon {
+            font-size: 1.5rem;
+        }
+
+        .budget-input {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .budget-display {
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: #2563eb;
+            min-width: 80px;
+        }
+
+        .success-message {
+            background: #10b981;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .trip-type-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1>✈️ TripPlanner</h1>
+            <p>Plan your perfect journey - Simple Version</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="trip-info">Trip Info</button>
+            <button class="nav-tab" data-tab="flights">Flights</button>
+            <button class="nav-tab" data-tab="hotels">Hotels</button>
+            <button class="nav-tab" data-tab="packing">Packing</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Trip Information Tab -->
+            <section class="tab-content active" id="trip-info">
+                <div class="card">
+                    <h2>Trip Information</h2>
+                    <form id="tripForm">
+                        <div class="form-group">
+                            <label for="tripName">Trip Name</label>
+                            <input type="text" id="tripName" placeholder="e.g., Summer Vacation 2024">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="departure">From</label>
+                                <input type="text" id="departure" placeholder="Departure city">
+                            </div>
+                            <div class="form-group">
+                                <label for="destination">To</label>
+                                <input type="text" id="destination" placeholder="Destination">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="startDate">Departure Date</label>
+                                <input type="date" id="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">Return Date</label>
+                                <input type="date" id="endDate">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="travelers">Travelers</label>
+                                <select id="travelers">
+                                    <option value="1">1 Person</option>
+                                    <option value="2">2 People</option>
+                                    <option value="3">3 People</option>
+                                    <option value="4">4 People</option>
+                                    <option value="5+">5+ People</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="budget">Budget</label>
+                                <div class="budget-input">
+                                    <input type="range" id="budgetRange" min="500" max="10000" value="2500" step="500">
+                                    <div class="budget-display">$<span id="budgetValue">2500</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Trip Type</label>
+                            <div class="trip-type-selector">
+                                <button type="button" class="trip-type-btn" data-type="business">
+                                    <span class="icon">💼</span>
+                                    <span>Business</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="leisure">
+                                    <span class="icon">🏖️</span>
+                                    <span>Leisure</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="adventure">
+                                    <span class="icon">🏔️</span>
+                                    <span>Adventure</span>
+                                </button>
+                                <button type="button" class="trip-type-btn" data-type="family">
+                                    <span class="icon">👨‍👩‍👧‍👦</span>
+                                    <span>Family</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Additional Notes</label>
+                            <textarea id="notes" placeholder="Any special requirements or preferences..."></textarea>
+                        </div>
+
+                        <button type="button" class="btn btn-primary" onclick="saveTrip()">
+                            Save Trip Information
+                        </button>
+                    </form>
+
+                    <div id="savedMessage" style="display: none;" class="success-message">
+                        ✅ Trip information saved successfully!
+                    </div>
+                </div>
+            </section>
+
+            <!-- Flights Tab -->
+            <section class="tab-content" id="flights">
+                <div class="card">
+                    <h2>Flight Preferences</h2>
+                    <div class="form-group">
+                        <label for="flightClass">Preferred Class</label>
+                        <select id="flightClass">
+                            <option value="economy">Economy</option>
+                            <option value="premium">Premium Economy</option>
+                            <option value="business">Business</option>
+                            <option value="first">First Class</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="airline">Preferred Airlines</label>
+                        <input type="text" id="airline" placeholder="e.g., Delta, American, United">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="saveFlight()">
+                        Save Flight Preferences
+                    </button>
+                    <div id="flightMessage" style="display: none;" class="success-message">
+                        ✅ Flight preferences saved!
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hotels Tab -->
+            <section class="tab-content" id="hotels">
+                <div class="card">
+                    <h2>Hotel Preferences</h2>
+                    <div class="form-group">
+                        <label for="hotelType">Hotel Type</label>
+                        <select id="hotelType">
+                            <option value="hotel">Hotel</option>
+                            <option value="resort">Resort</option>
+                            <option value="bnb">Bed & Breakfast</option>
+                            <option value="vacation-rental">Vacation Rental</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomType">Room Type</label>
+                        <select id="roomType">
+                            <option value="standard">Standard Room</option>
+                            <option value="suite">Suite</option>
+                            <option value="deluxe">Deluxe Room</option>
+                            <option value="family">Family Room</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="saveHotel()">
+                        Save Hotel Preferences
+                    </button>
+                    <div id="hotelMessage" style="display: none;" class="success-message">
+                        ✅ Hotel preferences saved!
+                    </div>
+                </div>
+            </section>
+
+            <!-- Packing Tab -->
+            <section class="tab-content" id="packing">
+                <div class="card">
+                    <h2>Packing Checklist</h2>
+                    <div class="form-group">
+                        <label for="newItem">Add Packing Item</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="newItem" placeholder="Enter item name">
+                            <button type="button" class="btn btn-secondary" onclick="addPackingItem()">Add</button>
+                        </div>
+                    </div>
+                    <div id="packingList">
+                        <!-- Packing items will be added here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Tab navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                
+                // Update active tab
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update active content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName).classList.add('active');
+            });
+        });
+
+        // Budget slider
+        const budgetRange = document.getElementById('budgetRange');
+        const budgetValue = document.getElementById('budgetValue');
+        budgetRange.addEventListener('input', function() {
+            budgetValue.textContent = this.value;
+        });
+
+        // Trip type selection
+        document.querySelectorAll('.trip-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.trip-type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Save functions
+        function saveTrip() {
+            const tripName = document.getElementById('tripName').value;
+            const departure = document.getElementById('departure').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (tripName && departure && destination) {
+                document.getElementById('savedMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('savedMessage').style.display = 'none';
+                }, 3000);
+            } else {
+                alert('Please fill in at least Trip Name, Departure, and Destination');
+            }
+        }
+
+        function saveFlight() {
+            document.getElementById('flightMessage').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('flightMessage').style.display = 'none';
+            }, 3000);
+        }
+
+        function saveHotel() {
+            document.getElementById('hotelMessage').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('hotelMessage').style.display = 'none';
+            }, 3000);
+        }
+
+        // Packing list functionality
+        let packingItems = [];
+
+        function addPackingItem() {
+            const itemInput = document.getElementById('newItem');
+            const itemName = itemInput.value.trim();
+            
+            if (itemName) {
+                packingItems.push({
+                    name: itemName,
+                    packed: false
+                });
+                itemInput.value = '';
+                renderPackingList();
+            }
+        }
+
+        function renderPackingList() {
+            const listContainer = document.getElementById('packingList');
+            listContainer.innerHTML = '';
+            
+            packingItems.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 0.5rem;';
+                
+                itemDiv.innerHTML = `
+                    <input type="checkbox" ${item.packed ? 'checked' : ''} onchange="togglePacked(${index})">
+                    <span style="${item.packed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${item.name}</span>
+                    <button onclick="removeItem(${index})" style="margin-left: auto; background: #ef4444; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer;">Remove</button>
+                `;
+                
+                listContainer.appendChild(itemDiv);
+            });
+        }
+
+        function togglePacked(index) {
+            packingItems[index].packed = !packingItems[index].packed;
+            renderPackingList();
+        }
+
+        function removeItem(index) {
+            packingItems.splice(index, 1);
+            renderPackingList();
+        }
+
+        // Add some default packing items
+        packingItems = [
+            {name: 'Passport/ID', packed: false},
+            {name: 'Phone Charger', packed: false},
+            {name: 'Comfortable Shoes', packed: false},
+            {name: 'Weather-appropriate Clothes', packed: false}
+        ];
+        renderPackingList();
+
+        console.log('✅ TripPlanner Simple Version Loaded Successfully!');
+    </script>
+</body>
+</html>
